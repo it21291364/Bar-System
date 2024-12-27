@@ -2,15 +2,61 @@
 import React from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
+import { createStackNavigator } from "@react-navigation/stack";
 import Ionicons from "@expo/vector-icons/Ionicons";
+
 import { DataProvider } from "./context/DataContext";
 
+// Import your existing screens
 import BankDepositScreen from "./screens/BankDepositScreen";
-import LiquorScreen from "./screens/LiquorScreen";
 import OtherExpensesScreen from "./screens/OtherExpensesScreen";
 import TotalSummaryScreen from "./screens/TotalSummaryScreen";
 import PreviousRecordsScreen from "./screens/PreviousRecordsScreen";
 
+// Import the Liquor screens
+import LiquorScreen from "./screens/LiquorScreen";
+import CategoryDetailsScreen from "./screens/CategoryDetailsScreen";
+import LiquorInfoScreen from "./screens/LiquorInfoScreen";
+import StockAndSalesScreen from "./screens/StockAndSalesScreen";
+
+// Create a Stack for all Liquor-related screens
+const LiquorStack = createStackNavigator();
+
+function LiquorStackScreen() {
+  return (
+    <LiquorStack.Navigator>
+      {/* Main Liquor Categories screen */}
+      <LiquorStack.Screen
+        name="LiquorMain"
+        component={LiquorScreen}
+        options={{ title: "Liquor Categories" }}
+      />
+
+      {/* Screen for category details (with Empty In/Out, etc.) */}
+      <LiquorStack.Screen
+        name="CategoryDetails"
+        component={CategoryDetailsScreen}
+        options={{ title: "Category Details" }}
+      />
+
+      {/* Screen for Liquor Info (Name, ml, Dozen, Quantity) */}
+      <LiquorStack.Screen
+        name="LiquorInfo"
+        component={LiquorInfoScreen}
+        options={{ title: "Liquor Info" }}
+      />
+
+      {/* Screen for Stock & Sales calculations */}
+      <LiquorStack.Screen
+        name="StockAndSales"
+        component={StockAndSalesScreen}
+        options={{ title: "Stock & Sales" }}
+      />
+    </LiquorStack.Navigator>
+  );
+}
+
+// Create the bottom tab navigator
 const Tab = createBottomTabNavigator();
 
 export default function App() {
@@ -19,11 +65,9 @@ export default function App() {
       <NavigationContainer>
         <Tab.Navigator
           screenOptions={({ route }) => ({
-            // This function returns the icon component for each route
+            // This returns an Ionicon for each route
             tabBarIcon: ({ focused, color, size }) => {
               let iconName;
-
-              // You can name icons depending on the route
               switch (route.name) {
                 case "Deposits":
                   iconName = focused ? "cash" : "cash-outline";
@@ -35,9 +79,7 @@ export default function App() {
                   iconName = focused ? "reader" : "reader-outline";
                   break;
                 case "Summary":
-                  iconName = focused
-                    ? "document-text"
-                    : "document-text-outline";
+                  iconName = focused ? "document-text" : "document-text-outline";
                   break;
                 case "Records":
                   iconName = focused ? "time" : "time-outline";
@@ -45,23 +87,37 @@ export default function App() {
                 default:
                   iconName = "help-circle-outline";
               }
-
-              // Return the Ionicons component
               return <Ionicons name={iconName} size={size} color={color} />;
             },
-            // Optionally configure active/inactive tint
             tabBarActiveTintColor: "tomato",
             tabBarInactiveTintColor: "gray",
-
-            // If you want *no text labels*, set:
-            // tabBarShowLabel: false,
           })}
         >
-          <Tab.Screen name="Deposits" component={BankDepositScreen} />
-          <Tab.Screen name="Liquors" component={LiquorScreen} />
-          <Tab.Screen name="Expenses" component={OtherExpensesScreen} />
-          <Tab.Screen name="Summary" component={TotalSummaryScreen} />
-          <Tab.Screen name="Records" component={PreviousRecordsScreen} />
+          <Tab.Screen
+            name="Deposits"
+            component={BankDepositScreen}
+            options={{ headerShown: false }}
+          />
+          <Tab.Screen
+            name="Liquors"
+            component={LiquorStackScreen}
+            options={{ headerShown: false }}
+          />
+          <Tab.Screen
+            name="Expenses"
+            component={OtherExpensesScreen}
+            options={{ headerShown: false }}
+          />
+          <Tab.Screen
+            name="Summary"
+            component={TotalSummaryScreen}
+            options={{ headerShown: false }}
+          />
+          <Tab.Screen
+            name="Records"
+            component={PreviousRecordsScreen}
+            options={{ headerShown: false }}
+          />
         </Tab.Navigator>
       </NavigationContainer>
     </DataProvider>
