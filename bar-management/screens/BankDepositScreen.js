@@ -36,11 +36,14 @@ export default function BankDepositScreen() {
   const [editItem, setEditItem] = useState(null);
   const [editDatePicker, setEditDatePicker] = useState(false);
 
-  // Format Date as "YYYY-MM-DD"
+  // Helper to format date as "YYYY-MM-DD"
   const formatDate = (dateObj) => {
     if (!(dateObj instanceof Date)) return dateObj;
     return dateObj.toISOString().split("T")[0];
   };
+
+  // Calculate total deposit
+  const totalDeposit = bankDeposits.reduce((sum, dep) => sum + dep.amount, 0);
 
   // ----------------------
   // ADD NEW DEPOSIT (MODAL)
@@ -57,7 +60,11 @@ export default function BankDepositScreen() {
 
   const handleAddDeposit = () => {
     // Required fields check
-    if (!newDeposit.date || !newDeposit.bank || newDeposit.amount.trim() === "") {
+    if (
+      !newDeposit.date ||
+      !newDeposit.bank ||
+      newDeposit.amount.trim() === ""
+    ) {
       Alert.alert("Required Fields", "Please fill in all fields before adding.");
       return;
     }
@@ -73,7 +80,6 @@ export default function BankDepositScreen() {
       id: Date.now().toString(),
       date: formatDate(newDeposit.date),
       bank: newDeposit.bank,
-      // store as number internally
       amount: numericAmount,
     };
 
@@ -88,21 +94,17 @@ export default function BankDepositScreen() {
   // DELETE (with confirmation)
   // ----------------------
   const handleDelete = (id) => {
-    Alert.alert(
-      "Confirm Delete",
-      "Are you sure you want to delete this deposit?",
-      [
-        { text: "Cancel", style: "cancel" },
-        {
-          text: "Delete",
-          style: "destructive",
-          onPress: () => {
-            setBankDeposits((prev) => prev.filter((item) => item.id !== id));
-            Alert.alert("Deposit Deleted", "The deposit was deleted successfully!");
-          },
+    Alert.alert("Confirm Delete", "Are you sure you want to delete this deposit?", [
+      { text: "Cancel", style: "cancel" },
+      {
+        text: "Delete",
+        style: "destructive",
+        onPress: () => {
+          setBankDeposits((prev) => prev.filter((item) => item.id !== id));
+          Alert.alert("Deposit Deleted", "The deposit was deleted successfully!");
         },
-      ]
-    );
+      },
+    ]);
   };
 
   // ----------------------
@@ -110,10 +112,7 @@ export default function BankDepositScreen() {
   // ----------------------
   const openEditModal = (item) => {
     // Convert numeric amount to string for input
-    setEditItem({
-      ...item,
-      amount: String(item.amount),
-    });
+    setEditItem({ ...item, amount: String(item.amount) });
     setEditModalVisible(true);
   };
 
@@ -152,12 +151,9 @@ export default function BankDepositScreen() {
   const renderItem = ({ item }) => (
     <View style={styles.row}>
       <View style={styles.rowContent}>
-        {/* Show amount with two decimals, e.g. Rs 250.00 */}
         <Text style={styles.cell}>Date: {item.date}</Text>
         <Text style={styles.cell}>Bank: {item.bank}</Text>
-        <Text style={styles.cell}>
-          Amount: Rs {item.amount.toFixed(2)}
-        </Text>
+        <Text style={styles.cell}>Amount: Rs {item.amount.toFixed(2)}</Text>
       </View>
       <View style={styles.actions}>
         <TouchableOpacity onPress={() => openEditModal(item)}>
@@ -183,6 +179,13 @@ export default function BankDepositScreen() {
         </TouchableOpacity>
       </View>
 
+      {/* Show total deposit at the top */}
+      <View style={styles.totalContainer}>
+        <Text style={styles.totalText}>
+          Total Deposit: Rs {totalDeposit.toFixed(2)}
+        </Text>
+      </View>
+
       {/* LIST OF DEPOSITS */}
       <FlatList
         data={bankDeposits}
@@ -192,7 +195,11 @@ export default function BankDepositScreen() {
       />
 
       {/* CREATE DEPOSIT MODAL */}
-      <Modal visible={addModalVisible} animationType="slide" transparent={false}>
+      <Modal
+        visible={addModalVisible}
+        animationType="slide"
+        transparent={false}
+      >
         <ScrollView style={styles.modalScrollContainer}>
           <View style={styles.modalContainer}>
             <Text style={styles.heading}>Create Deposit</Text>
@@ -212,7 +219,10 @@ export default function BankDepositScreen() {
                 onChange={(event, selectedDate) => {
                   setShowDatePicker(false);
                   if (selectedDate) {
-                    setNewDeposit((prev) => ({ ...prev, date: selectedDate }));
+                    setNewDeposit((prev) => ({
+                      ...prev,
+                      date: selectedDate,
+                    }));
                   }
                 }}
               />
@@ -239,7 +249,6 @@ export default function BankDepositScreen() {
             )}
 
             <Text>Amount</Text>
-            {/* Store user input as a string so multiple digits can be typed */}
             <TextInput
               style={styles.textInput}
               value={newDeposit.amount}
@@ -251,15 +260,8 @@ export default function BankDepositScreen() {
             />
 
             <View style={styles.iconButtonRow}>
-              <TouchableOpacity
-                onPress={handleAddDeposit}
-                style={styles.iconButton}
-              >
-                <Ionicons
-                  name="checkmark-circle-outline"
-                  size={36}
-                  color="green"
-                />
+              <TouchableOpacity onPress={handleAddDeposit} style={styles.iconButton}>
+                <Ionicons name="checkmark-circle-outline" size={36} color="green" />
                 <Text>Save</Text>
               </TouchableOpacity>
 
@@ -276,7 +278,11 @@ export default function BankDepositScreen() {
       </Modal>
 
       {/* EDIT DEPOSIT MODAL */}
-      <Modal visible={editModalVisible} animationType="slide" transparent={false}>
+      <Modal
+        visible={editModalVisible}
+        animationType="slide"
+        transparent={false}
+      >
         <ScrollView style={styles.modalScrollContainer}>
           <View style={styles.modalContainer}>
             {editItem && (
@@ -368,7 +374,11 @@ export default function BankDepositScreen() {
                     onPress={() => setEditModalVisible(false)}
                     style={styles.iconButton}
                   >
-                    <Ionicons name="close-circle-outline" size={36} color="red" />
+                    <Ionicons
+                      name="close-circle-outline"
+                      size={36}
+                      color="red"
+                    />
                     <Text>Cancel</Text>
                   </TouchableOpacity>
                 </View>
@@ -381,6 +391,9 @@ export default function BankDepositScreen() {
   );
 }
 
+// ------------------------
+// STYLES
+// ------------------------
 const styles = StyleSheet.create({
   container: {
     flex: 1,
@@ -392,6 +405,17 @@ const styles = StyleSheet.create({
   addButton: {
     flexDirection: "row",
     alignItems: "center",
+  },
+  totalContainer: {
+    marginHorizontal: 16,
+    marginBottom: 8,
+    padding: 8,
+    backgroundColor: "#eee",
+    borderRadius: 6,
+  },
+  totalText: {
+    fontSize: 16,
+    fontWeight: "bold",
   },
   row: {
     flexDirection: "row",
