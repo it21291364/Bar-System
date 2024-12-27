@@ -1,33 +1,66 @@
 // screens/CategoryDetailsScreen.js
 import React, { useContext, useState, useEffect } from "react";
-import { View, Text, StyleSheet, TextInput, Button } from "react-native";
+import { View, Text, StyleSheet, TextInput, Button, Alert } from "react-native";
 import { useRoute, useNavigation } from "@react-navigation/native";
 import { DataContext } from "../context/DataContext";
 
 export default function CategoryDetailsScreen() {
   const route = useRoute();
   const navigation = useNavigation();
-  const { liquorItems } = useContext(DataContext);
+  const { liquorItems, setLiquorItems } = useContext(DataContext);
 
-  const { categoryId } = route.params; 
+  const { categoryId } = route.params;
   const [category, setCategory] = useState(null);
 
-  // For "Empty In" / "Empty Out"
-  const [emptyIn, setEmptyIn] = useState("");
-  const [emptyOut, setEmptyOut] = useState("");
+  // Locally tracked emptyIn/emptyOut
+  const [tempEmptyIn, setTempEmptyIn] = useState("");
+  const [tempEmptyOut, setTempEmptyOut] = useState("");
 
-  // Suppose you want to multiply emptyIn by 100, emptyOut by 500, etc.
-  // Adjust as needed:
-  const finalEmptyIn = parseFloat(emptyIn) ? parseFloat(emptyIn) * 100 : 0;
-  const finalEmptyOut = parseFloat(emptyOut) ? parseFloat(emptyOut) * 500 : 0;
+  // Multiplying each by 100
+  const calcEmptyIn = parseFloat(tempEmptyIn) || 0;
+  const calcEmptyOut = parseFloat(tempEmptyOut) || 0;
+  const finalEmptyIn = calcEmptyIn * 100;
+  const finalEmptyOut = calcEmptyOut * 100;
+  const totalEmpty = finalEmptyIn + finalEmptyOut;
 
   useEffect(() => {
-    // find the category by ID
     const found = liquorItems.find((cat) => cat.id === categoryId);
     if (found) {
       setCategory(found);
+
+      // If the category has saved emptyIn/out, load them
+      const savedIn =
+        found.emptyIn !== undefined ? String(found.emptyIn) : "";
+      const savedOut =
+        found.emptyOut !== undefined ? String(found.emptyOut) : "";
+      setTempEmptyIn(savedIn);
+      setTempEmptyOut(savedOut);
     }
   }, [liquorItems, categoryId]);
+
+  // Helper to update the category in context
+  const updateCategory = (updatedCat) => {
+    setLiquorItems((prev) =>
+      prev.map((c) => (c.id === updatedCat.id ? updatedCat : c))
+    );
+  };
+
+  const handleSaveEmpty = () => {
+    if (!category) return;
+
+    // Convert to number
+    const newEmptyIn = parseFloat(tempEmptyIn) || 0;
+    const newEmptyOut = parseFloat(tempEmptyOut) || 0;
+
+    const updatedCat = {
+      ...category,
+      emptyIn: newEmptyIn,
+      emptyOut: newEmptyOut,
+    };
+    updateCategory(updatedCat);
+
+    Alert.alert("Saved", "Empty in/out stock saved to DB!");
+  };
 
   if (!category) {
     return (
@@ -41,6 +74,7 @@ export default function CategoryDetailsScreen() {
     <View style={styles.container}>
       <Text style={styles.heading}>{category.name}</Text>
 
+      {/* Navigation Buttons */}
       <View style={styles.btnContainer}>
         <Button
           title="Liquor Info"
@@ -52,30 +86,46 @@ export default function CategoryDetailsScreen() {
         />
       </View>
 
+      {/* Input Fields for Empty In/Out */}
       <View style={styles.emptyFields}>
         <Text>Empty In Stock</Text>
         <TextInput
           style={styles.textInput}
           keyboardType="numeric"
           placeholder="e.g. 2"
-          value={emptyIn}
-          onChangeText={setEmptyIn}
+          value={tempEmptyIn}
+          onChangeText={setTempEmptyIn}
         />
-        <Text>
-          Calculated In: Rs {finalEmptyIn.toFixed(2)}
-        </Text>
 
         <Text style={{ marginTop: 16 }}>Empty Out Stock</Text>
         <TextInput
           style={styles.textInput}
           keyboardType="numeric"
           placeholder="e.g. 3"
-          value={emptyOut}
-          onChangeText={setEmptyOut}
+          value={tempEmptyOut}
+          onChangeText={setTempEmptyOut}
         />
-        <Text>
+
+        <Button title="Save Empty Data" onPress={handleSaveEmpty} />
+      </View>
+
+      {/* Display the three rows of calculations */}
+      <View style={styles.calcContainer}>
+        <Text style={styles.calcRow}>
+          Calculated In: Rs {finalEmptyIn.toFixed(2)}
+        </Text>
+        <Text style={styles.calcRow}>
           Calculated Out: Rs {finalEmptyOut.toFixed(2)}
         </Text>
+        <Text style={[styles.calcRow, { fontWeight: "bold" }]}>
+          Total Empty Amount: Rs {totalEmpty.toFixed(2)}
+        </Text>
+      </View>
+
+      {/* Show what's currently saved */}
+      <View style={styles.savedContainer}>
+        <Text>Saved emptyIn: {category.emptyIn || 0}</Text>
+        <Text>Saved emptyOut: {category.emptyOut || 0}</Text>
       </View>
     </View>
   );
@@ -90,7 +140,7 @@ const styles = StyleSheet.create({
     marginBottom: 20,
   },
   emptyFields: {
-    marginTop: 16,
+    marginBottom: 20,
   },
   textInput: {
     borderWidth: 1,
@@ -98,5 +148,21 @@ const styles = StyleSheet.create({
     borderRadius: 6,
     marginVertical: 8,
     padding: 8,
+  },
+  calcContainer: {
+    backgroundColor: "#f8f8f8",
+    padding: 10,
+    borderRadius: 6,
+    marginBottom: 12,
+  },
+  calcRow: {
+    fontSize: 15,
+    marginVertical: 4,
+  },
+  savedContainer: {
+    marginTop: 10,
+    backgroundColor: "#f9f9f9",
+    padding: 8,
+    borderRadius: 6,
   },
 });

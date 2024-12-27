@@ -1,3 +1,4 @@
+// screens/LiquorInfoScreen.js
 import React, { useContext, useState, useEffect } from "react";
 import {
   View,
@@ -8,8 +9,8 @@ import {
   StyleSheet,
   TextInput,
   TouchableOpacity,
-  Button,
   ScrollView,
+  Button
 } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useRoute } from "@react-navigation/native";
@@ -38,7 +39,7 @@ export default function LiquorInfoScreen() {
   // Additional quantity for the "newLiquor" form
   const [tempQuantityValue, setTempQuantityValue] = useState("");
 
-  // Additional quantity for the "editLiquor" form (when adding new quantities)
+  // Additional quantity for the "editLiquor" form
   const [editTempQty, setEditTempQty] = useState("");
 
   useEffect(() => {
@@ -46,18 +47,15 @@ export default function LiquorInfoScreen() {
     setCategory(foundCat || null);
   }, [liquorItems, categoryId]);
 
-  // -----------------------------------
-  // Helper: Update the category in context
-  // -----------------------------------
   const updateCategoryInContext = (updatedCat) => {
     setLiquorItems((prev) =>
       prev.map((c) => (c.id === categoryId ? updatedCat : c))
     );
   };
 
-  // -----------------------------------
+  // ---------------------------
   // Add Sub Liquor
-  // -----------------------------------
+  // ---------------------------
   const openAddModal = () => {
     setNewLiquor({ name: "", ml: "", dozen: "", quantityFields: [] });
     setTempQuantityValue("");
@@ -74,12 +72,16 @@ export default function LiquorInfoScreen() {
       Alert.alert("Invalid", "ML and Dozen must be numeric.");
       return;
     }
+
+    // Filter out zero quantities
+    const filteredQs = newLiquor.quantityFields.filter((q) => q !== 0);
+
     const newItem = {
       id: Date.now().toString(),
       name: newLiquor.name.trim(),
       ml: mlNum,
       dozen: dozenNum,
-      quantityFields: [...newLiquor.quantityFields],
+      quantityFields: filteredQs,
     };
     const updatedCat = {
       ...category,
@@ -99,6 +101,11 @@ export default function LiquorInfoScreen() {
       Alert.alert("Invalid", "Quantity must be numeric.");
       return;
     }
+    if (qtyNum === 0) {
+      Alert.alert("Info", "Zero quantity ignored.");
+      setTempQuantityValue("");
+      return;
+    }
     setNewLiquor((prev) => ({
       ...prev,
       quantityFields: [...prev.quantityFields, qtyNum],
@@ -106,16 +113,15 @@ export default function LiquorInfoScreen() {
     setTempQuantityValue("");
   };
 
-  // -----------------------------------
+  // ---------------------------
   // Edit Sub Liquor
-  // -----------------------------------
+  // ---------------------------
   const openEditModal = (item) => {
-    // Convert numeric fields to string for text inputs
     setEditLiquor({
       ...item,
       ml: String(item.ml),
       dozen: String(item.dozen),
-      quantityFields: [...item.quantityFields], // copy array
+      quantityFields: [...item.quantityFields],
     });
     setEditTempQty("");
     setEditModalVisible(true);
@@ -131,22 +137,22 @@ export default function LiquorInfoScreen() {
       Alert.alert("Invalid", "ML and Dozen must be numeric.");
       return;
     }
-    // parse existing quantities as float if needed
-    const updatedQuantities = editLiquor.quantityFields.map((q) =>
+
+    const updatedQs = editLiquor.quantityFields.map((q) =>
       typeof q === "string" ? parseFloat(q) : q
     );
-    // Build the updated subLiquor
+    const filteredQs = updatedQs.filter((val) => val !== 0);
+
     const updatedSub = {
       ...editLiquor,
       ml: mlNum,
       dozen: dozenNum,
-      quantityFields: updatedQuantities,
+      quantityFields: filteredQs,
     };
 
-    const updatedSubLiquors = category.subLiquors.map((lq) => {
-      if (lq.id === updatedSub.id) return updatedSub;
-      return lq;
-    });
+    const updatedSubLiquors = category.subLiquors.map((lq) =>
+      lq.id === updatedSub.id ? updatedSub : lq
+    );
     const updatedCat = { ...category, subLiquors: updatedSubLiquors };
     updateCategoryInContext(updatedCat);
 
@@ -162,6 +168,11 @@ export default function LiquorInfoScreen() {
       Alert.alert("Invalid", "Quantity must be numeric.");
       return;
     }
+    if (qtyNum === 0) {
+      Alert.alert("Info", "Zero quantity ignored.");
+      setEditTempQty("");
+      return;
+    }
     setEditLiquor((prev) => ({
       ...prev,
       quantityFields: [...prev.quantityFields, qtyNum],
@@ -169,20 +180,23 @@ export default function LiquorInfoScreen() {
     setEditTempQty("");
   };
 
-  // Edit an existing quantity in the array
   const handleEditQuantityField = (index, value) => {
-    // user typed a new value for a specific quantity index
     const newArr = [...editLiquor.quantityFields];
-    newArr[index] = value; // store as string now
+    const parsedVal = parseFloat(value);
+    if (isNaN(parsedVal)) {
+      newArr[index] = 0;
+    } else {
+      newArr[index] = parsedVal;
+    }
     setEditLiquor((prev) => ({
       ...prev,
       quantityFields: newArr,
     }));
   };
 
-  // -----------------------------------
+  // ---------------------------
   // Delete Sub Liquor
-  // -----------------------------------
+  // ---------------------------
   const handleDeleteLiquor = (id) => {
     Alert.alert("Confirm", "Delete this liquor item?", [
       { text: "Cancel", style: "cancel" },
@@ -193,14 +207,12 @@ export default function LiquorInfoScreen() {
           const updatedSub = category.subLiquors.filter((lq) => lq.id !== id);
           const updatedCat = { ...category, subLiquors: updatedSub };
           updateCategoryInContext(updatedCat);
-
           Alert.alert("Deleted", "Liquor info deleted!");
         },
       },
     ]);
   };
 
-  // If no category found, just show fallback
   if (!category) {
     return (
       <View style={styles.container}>
@@ -209,53 +221,48 @@ export default function LiquorInfoScreen() {
     );
   }
 
-  // -----------------------------------
-  // RENDER TABLE HEADERS + ROWS
-  // -----------------------------------
-  const renderTableHeader = () => {
-    return (
-      <View style={styles.tableHeader}>
-        <Text style={[styles.tableCellHeader, { flex: 1.5 }]}>Name</Text>
-        <Text style={styles.tableCellHeader}>ML</Text>
-        <Text style={styles.tableCellHeader}>Dozen</Text>
-        <Text style={[styles.tableCellHeader, { flex: 1.5 }]}>Quantities</Text>
-        <Text style={[styles.tableCellHeader, { flex: 0.8 }]}>Edit</Text>
-        <Text style={[styles.tableCellHeader, { flex: 0.8 }]}>Delete</Text>
-      </View>
-    );
-  };
+  // Table header / row
+  const renderTableHeader = () => (
+    <View style={styles.tableHeader}>
+      <Text style={[styles.tableCellHeader, { flex: 1.5 }]}>Name</Text>
+      <Text style={styles.tableCellHeader}>ML</Text>
+      <Text style={styles.tableCellHeader}>Dozen</Text>
+      <Text style={[styles.tableCellHeader, { flex: 1.5 }]}>Quantities</Text>
+      <Text style={[styles.tableCellHeader, { flex: 0.8 }]}>Edit</Text>
+      <Text style={[styles.tableCellHeader, { flex: 0.8 }]}>Delete</Text>
+    </View>
+  );
 
-  const renderTableRow = ({ item }) => {
-    return (
-      <View style={styles.tableRow}>
-        <Text style={[styles.tableCell, { flex: 1.5 }]}>{item.name}</Text>
-        <Text style={styles.tableCell}>{item.ml}</Text>
-        <Text style={styles.tableCell}>{item.dozen}</Text>
-        <Text style={[styles.tableCell, { flex: 1.5 }]}>
-          {item.quantityFields.join(", ")}
-        </Text>
-        <View style={[styles.tableCell, { flex: 0.8, alignItems: "center" }]}>
-          <TouchableOpacity onPress={() => openEditModal(item)}>
-            <Ionicons name="create-outline" size={24} color="#000" />
-          </TouchableOpacity>
-        </View>
-        <View style={[styles.tableCell, { flex: 0.8, alignItems: "center" }]}>
-          <TouchableOpacity onPress={() => handleDeleteLiquor(item.id)}>
-            <Ionicons name="trash-outline" size={24} color="red" />
-          </TouchableOpacity>
-        </View>
+  const renderTableRow = ({ item }) => (
+    <View style={styles.tableRow}>
+      <Text style={[styles.tableCell, { flex: 1.5 }]}>{item.name}</Text>
+      <Text style={styles.tableCell}>{item.ml}</Text>
+      <Text style={styles.tableCell}>{item.dozen}</Text>
+      <Text style={[styles.tableCell, { flex: 1.5 }]}>
+        {item.quantityFields.join(", ")}
+      </Text>
+      <View style={[styles.tableCell, { flex: 0.8, alignItems: "center" }]}>
+        <TouchableOpacity onPress={() => openEditModal(item)}>
+          <Ionicons name="create-outline" size={24} color="#000" />
+        </TouchableOpacity>
       </View>
-    );
-  };
+      <View style={[styles.tableCell, { flex: 0.8, alignItems: "center" }]}>
+        <TouchableOpacity onPress={() => handleDeleteLiquor(item.id)}>
+          <Ionicons name="trash-outline" size={24} color="red" />
+        </TouchableOpacity>
+      </View>
+    </View>
+  );
 
   return (
     <View style={styles.container}>
-      <Button title="Add Liquor Info" onPress={openAddModal} />
+      <TouchableOpacity style={styles.addButton} onPress={openAddModal}>
+        <Ionicons name="add-circle-outline" size={28} color="green" />
+        <Text style={{ marginLeft: 8 }}>Add Liquor Info</Text>
+      </TouchableOpacity>
 
-      {/* ScrollView horizontally if you have many columns */}
       <ScrollView horizontal style={{ marginTop: 16 }}>
-        <View style={{ width: 900 }}> 
-          {/* Adjust width so the table looks bigger/spacious */}
+        <View style={{ width: 900 }}>
           {renderTableHeader()}
           <FlatList
             data={category.subLiquors}
@@ -267,59 +274,77 @@ export default function LiquorInfoScreen() {
 
       {/* ADD MODAL */}
       <Modal visible={addModalVisible} transparent={false}>
-        <View style={styles.modalContainer}>
-          <Text style={styles.heading}>Add Liquor Info</Text>
+        <ScrollView style={styles.modalScroll}>
+          <View style={styles.modalContainer}>
+            <Text style={styles.heading}>Add Liquor Info</Text>
 
-          <Text>Name</Text>
-          <TextInput
-            style={styles.textInput}
-            value={newLiquor.name}
-            onChangeText={(val) =>
-              setNewLiquor((prev) => ({ ...prev, name: val }))
-            }
-          />
-
-          <Text>Milliliters</Text>
-          <TextInput
-            style={styles.textInput}
-            value={newLiquor.ml}
-            onChangeText={(val) => setNewLiquor((prev) => ({ ...prev, ml: val }))}
-            keyboardType="numeric"
-          />
-
-          <Text>Dozen</Text>
-          <TextInput
-            style={styles.textInput}
-            value={newLiquor.dozen}
-            onChangeText={(val) =>
-              setNewLiquor((prev) => ({ ...prev, dozen: val }))
-            }
-            keyboardType="numeric"
-          />
-
-          {/* Add quantity fields */}
-          <View style={{ marginTop: 10 }}>
-            <Text style={{ fontWeight: "bold" }}>Add Quantities</Text>
+            <Text>Name</Text>
             <TextInput
               style={styles.textInput}
-              value={tempQuantityValue}
-              onChangeText={setTempQuantityValue}
-              keyboardType="numeric"
-              placeholder="e.g. 1, 2..."
+              value={newLiquor.name}
+              onChangeText={(val) =>
+                setNewLiquor((prev) => ({ ...prev, name: val }))
+              }
             />
-            <Button title="Add Quantity" onPress={addQuantityField} />
-            <Text>Current: {newLiquor.quantityFields.join(", ")}</Text>
-          </View>
 
-          <View style={styles.btnRow}>
-            <Button title="Save" onPress={handleAddLiquor} />
-            <Button
-              title="Cancel"
-              color="red"
-              onPress={() => setAddModalVisible(false)}
+            <Text>Milliliters</Text>
+            <TextInput
+              style={styles.textInput}
+              value={newLiquor.ml}
+              onChangeText={(val) =>
+                setNewLiquor((prev) => ({ ...prev, ml: val }))
+              }
+              keyboardType="numeric"
             />
+
+            <Text>Dozen</Text>
+            <TextInput
+              style={styles.textInput}
+              value={newLiquor.dozen}
+              onChangeText={(val) =>
+                setNewLiquor((prev) => ({ ...prev, dozen: val }))
+              }
+              keyboardType="numeric"
+            />
+
+            {/* Add quantity fields */}
+            <View style={{ marginTop: 10 }}>
+              <Text style={{ fontWeight: "bold" }}>Add Quantities</Text>
+              <TextInput
+                style={styles.textInput}
+                value={tempQuantityValue}
+                onChangeText={setTempQuantityValue}
+                keyboardType="numeric"
+                placeholder="e.g. 1, 2..."
+              />
+              <Button title="Add Quantity" onPress={addQuantityField} />
+              <Text>Current: {newLiquor.quantityFields.join(", ")}</Text>
+            </View>
+
+            {/* Icon Buttons for Save/Cancel */}
+            <View style={styles.iconButtonRow}>
+              <TouchableOpacity
+                style={styles.iconButton}
+                onPress={handleAddLiquor}
+              >
+                <Ionicons
+                  name="checkmark-circle-outline"
+                  size={34}
+                  color="green"
+                />
+                <Text>Save</Text>
+              </TouchableOpacity>
+
+              <TouchableOpacity
+                style={styles.iconButton}
+                onPress={() => setAddModalVisible(false)}
+              >
+                <Ionicons name="close-circle-outline" size={34} color="red" />
+                <Text>Cancel</Text>
+              </TouchableOpacity>
+            </View>
           </View>
-        </View>
+        </ScrollView>
       </Modal>
 
       {/* EDIT MODAL */}
@@ -359,9 +384,11 @@ export default function LiquorInfoScreen() {
                   keyboardType="numeric"
                 />
 
-                {/* Edit existing quantity fields individually */}
+                {/* Edit existing quantity fields */}
                 <View style={{ marginTop: 10 }}>
-                  <Text style={{ fontWeight: "bold" }}>Edit Existing Quantities</Text>
+                  <Text style={{ fontWeight: "bold" }}>
+                    Edit Existing Quantities
+                  </Text>
                   {editLiquor.quantityFields.map((q, index) => (
                     <View key={index} style={styles.quantityRow}>
                       <Text style={{ marginRight: 8 }}>Qty {index + 1}:</Text>
@@ -391,13 +418,30 @@ export default function LiquorInfoScreen() {
                   </Text>
                 </View>
 
-                <View style={styles.btnRow}>
-                  <Button title="Save" onPress={handleSaveEdit} />
-                  <Button
-                    title="Cancel"
-                    color="red"
+                <View style={styles.iconButtonRow}>
+                  <TouchableOpacity
+                    style={styles.iconButton}
+                    onPress={handleSaveEdit}
+                  >
+                    <Ionicons
+                      name="checkmark-circle-outline"
+                      size={34}
+                      color="green"
+                    />
+                    <Text>Save</Text>
+                  </TouchableOpacity>
+
+                  <TouchableOpacity
+                    style={styles.iconButton}
                     onPress={() => setEditModalVisible(false)}
-                  />
+                  >
+                    <Ionicons
+                      name="close-circle-outline"
+                      size={34}
+                      color="red"
+                    />
+                    <Text>Cancel</Text>
+                  </TouchableOpacity>
                 </View>
               </>
             )}
@@ -408,17 +452,18 @@ export default function LiquorInfoScreen() {
   );
 }
 
-// -----------------------------------
-// STYLES
-// -----------------------------------
 const styles = StyleSheet.create({
   container: { flex: 1, padding: 16 },
+  addButton: {
+    flexDirection: "row",
+    alignItems: "center",
+  },
   modalScroll: {
     flex: 1,
+    marginTop: 50,
   },
   modalContainer: {
     flex: 1,
-    marginTop: 50,
     padding: 16,
   },
   heading: {
@@ -433,12 +478,6 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     padding: 8,
   },
-  btnRow: {
-    flexDirection: "row",
-    justifyContent: "space-between",
-    marginTop: 20,
-  },
-  // Table header / rows
   tableHeader: {
     flexDirection: "row",
     backgroundColor: "#dcdcdc",
@@ -461,16 +500,18 @@ const styles = StyleSheet.create({
     textAlign: "center",
     flex: 1,
   },
-  // quantity row in edit
   quantityRow: {
     flexDirection: "row",
     alignItems: "center",
     marginBottom: 8,
   },
-  actions: {
+  iconButtonRow: {
     flexDirection: "row",
-    width: 60,
-    justifyContent: "space-between",
+    justifyContent: "space-around",
+    marginTop: 20,
+  },
+  iconButton: {
     alignItems: "center",
+    marginHorizontal: 20,
   },
 });

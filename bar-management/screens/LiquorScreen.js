@@ -9,7 +9,6 @@ import {
   StyleSheet,
   TextInput,
   TouchableOpacity,
-  Button,
 } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { DataContext } from "../context/DataContext";
@@ -133,13 +132,21 @@ export default function LiquorScreen() {
             value={newCategoryName}
             onChangeText={setNewCategoryName}
           />
-          <View style={styles.btnRow}>
-            <Button title="Save" onPress={handleAddCategory} />
-            <Button
-              title="Cancel"
-              color="red"
+          <View style={styles.iconButtonRow}>
+            {/* Icon button for Save */}
+            <TouchableOpacity style={styles.iconButton} onPress={handleAddCategory}>
+              <Ionicons name="checkmark-circle-outline" size={34} color="green" />
+              <Text>Save</Text>
+            </TouchableOpacity>
+
+            {/* Icon button for Cancel */}
+            <TouchableOpacity
+              style={styles.iconButton}
               onPress={() => setAddModalVisible(false)}
-            />
+            >
+              <Ionicons name="close-circle-outline" size={34} color="red" />
+              <Text>Cancel</Text>
+            </TouchableOpacity>
           </View>
         </View>
       </Modal>
@@ -157,13 +164,19 @@ export default function LiquorScreen() {
                   setEditCategory((prev) => ({ ...prev, name: val }))
                 }
               />
-              <View style={styles.btnRow}>
-                <Button title="Save" onPress={handleSaveEdit} />
-                <Button
-                  title="Cancel"
-                  color="red"
+              <View style={styles.iconButtonRow}>
+                <TouchableOpacity style={styles.iconButton} onPress={handleSaveEdit}>
+                  <Ionicons name="checkmark-circle-outline" size={34} color="green" />
+                  <Text>Save</Text>
+                </TouchableOpacity>
+
+                <TouchableOpacity
+                  style={styles.iconButton}
                   onPress={() => setEditModalVisible(false)}
-                />
+                >
+                  <Ionicons name="close-circle-outline" size={34} color="red" />
+                  <Text>Cancel</Text>
+                </TouchableOpacity>
               </View>
             </>
           )}
@@ -212,8 +225,13 @@ const styles = StyleSheet.create({
     marginBottom: 10,
     padding: 8,
   },
-  btnRow: {
+  iconButtonRow: {
     flexDirection: "row",
-    justifyContent: "space-between",
+    justifyContent: "space-around",
+    marginTop: 20,
+  },
+  iconButton: {
+    alignItems: "center",
+    marginHorizontal: 20,
   },
 });
