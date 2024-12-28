@@ -158,7 +158,7 @@ export default function StockAndSalesScreen() {
       <Text style={styles.headerCell}>ML</Text>
       <Text style={styles.headerCell}>BuyPrice</Text>
       <Text style={styles.headerCell}>SellPrice</Text>
-      <Text style={[styles.headerCell, { flex: 1.5 }]}>Purchasing Stock</Text>
+      {/* <Text style={[styles.headerCell, { flex: 1.5 }]}>Purchasing Stock</Text> */}
       <Text style={styles.headerCell}>P. Stock T.</Text>
       <Text style={styles.headerCell}>Sold</Text>
       <Text style={styles.headerCell}>InStock</Text>
@@ -175,9 +175,9 @@ export default function StockAndSalesScreen() {
       <Text style={styles.cell}>{item.ml}</Text>
       <Text style={styles.cell}>{item.buyingPrice}</Text>
       <Text style={styles.cell}>{item.sellingPrice}</Text>
-      <Text style={[styles.cell, { flex: 1.5 }]}>
+      {/* <Text style={[styles.cell, { flex: 1.5 }]}>
         {item.purchasingStockString}
-      </Text>
+      </Text> */}
       <Text style={styles.cell}>{item.purchasingStockTotal}</Text>
       <Text style={styles.cell}>{item.soldItems}</Text>
       <Text style={styles.cell}>{item.inStock}</Text>
