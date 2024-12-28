@@ -62,37 +62,68 @@ export const DataProvider = ({ children }) => {
     const sanitizedSalary = parseFloat(salary) || 0;
     const sanitizedLocker = parseFloat(locker) || 0;
 
-    // 2) Save current snapshot in previousRecords
+    // 2) Compute necessary fields for previousRecords
+    const computedLiquorItems = liquorItems.map((cat) => {
+      const computedSubLiquors = cat.subLiquors.map((sub) => {
+        const dozen = parseFloat(sub.dozen) || 1; // Avoid division by zero
+        const purchasingStockTotal = (sub.quantityFields || []).reduce(
+          (acc, qty) => acc + (dozen * qty),
+          0
+        );
+        const soldItems = purchasingStockTotal - (parseFloat(sub.inStock) || 0);
+        const validSoldItems = soldItems > 0 ? soldItems : 0;
+        const sale = validSoldItems * (parseFloat(sub.sellingPrice) || 0);
+        const inStockBalance = (parseFloat(sub.inStock) || 0) * (parseFloat(sub.sellingPrice) || 0);
+
+        return {
+          ...sub,
+          purchasingStockTotal,
+          soldItems,
+          sale,
+          inStockBalance,
+        };
+      });
+
+      return {
+        ...cat,
+        subLiquors: computedSubLiquors,
+      };
+    });
+
+    // 3) Create a deep copy with computed fields for previousRecords
     const newRecord = {
       id: Date.now().toString(),
-      bankDeposits,
-      liquorItems,
-      otherExpenses,
+      bankDeposits: JSON.parse(JSON.stringify(bankDeposits)),
+      liquorItems: JSON.parse(JSON.stringify(computedLiquorItems)),
+      otherExpenses: JSON.parse(JSON.stringify(otherExpenses)),
       salary: sanitizedSalary,
       locker: sanitizedLocker,
       dateCleared: new Date().toISOString(),
     };
-    setPreviousRecords((prev) => [...prev, newRecord]);
 
-    // 3) Clear bankDeposits & otherExpenses arrays
+    // 4) Prepend the new record to have newest records at the top
+    setPreviousRecords((prev) => [newRecord, ...prev]);
+
+    // 5) Clear bankDeposits & otherExpenses arrays
     setBankDeposits([]);
     setOtherExpenses([]);
 
-    // 4) Reset salary and locker
+    // 6) Reset salary and locker
     setSalary(0);
     setLocker(0);
 
-    // 5) For each liquor category & subLiquors, transfer inStock to purchasingStockTotal and reset inStock
+    // 7) Reset liquorItems: transfer inStock to purchasingStockTotal and reset inStock
     const updatedLiquors = liquorItems.map((cat) => {
       const updatedSubs = cat.subLiquors.map((sub) => {
         const dozen = parseFloat(sub.dozen) || 1; // Avoid division by zero
-        const newQuantity = sub.inStock / dozen;
+        const newQuantity = (parseFloat(sub.inStock) || 0) / dozen;
 
         return {
           ...sub,
           quantityFields: [newQuantity], // Set purchasingStockTotal to previous inStock
           inStock: 0, // Reset inStock
           sale: 0, // Reset sale
+          inStockBalance: 0, // Reset inStockBalance
         };
       });
 
