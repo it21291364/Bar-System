@@ -10,13 +10,17 @@ export const DataProvider = ({ children }) => {
   const [otherExpenses, setOtherExpenses] = useState([]);
   const [previousRecords, setPreviousRecords] = useState([]);
 
+  // New states for salary and locker
+  const [salary, setSalary] = useState(0);
+  const [locker, setLocker] = useState(0);
+
   useEffect(() => {
     loadData();
   }, []);
 
   useEffect(() => {
     saveData();
-  }, [bankDeposits, liquorItems, otherExpenses, previousRecords]);
+  }, [bankDeposits, liquorItems, otherExpenses, previousRecords, salary, locker]);
 
   const loadData = async () => {
     try {
@@ -24,11 +28,15 @@ export const DataProvider = ({ children }) => {
       const storedLiquor = await AsyncStorage.getItem('@liquor_items');
       const storedExpenses = await AsyncStorage.getItem('@other_expenses');
       const storedPrev = await AsyncStorage.getItem('@previous_records');
+      const storedSalary = await AsyncStorage.getItem('@salary');
+      const storedLocker = await AsyncStorage.getItem('@locker');
 
       if (storedBank) setBankDeposits(JSON.parse(storedBank));
       if (storedLiquor) setLiquorItems(JSON.parse(storedLiquor));
       if (storedExpenses) setOtherExpenses(JSON.parse(storedExpenses));
       if (storedPrev) setPreviousRecords(JSON.parse(storedPrev));
+      if (storedSalary) setSalary(JSON.parse(storedSalary));
+      if (storedLocker) setLocker(JSON.parse(storedLocker));
     } catch (error) {
       console.error('Error loading data from AsyncStorage:', error);
     }
@@ -40,24 +48,60 @@ export const DataProvider = ({ children }) => {
       await AsyncStorage.setItem('@liquor_items', JSON.stringify(liquorItems));
       await AsyncStorage.setItem('@other_expenses', JSON.stringify(otherExpenses));
       await AsyncStorage.setItem('@previous_records', JSON.stringify(previousRecords));
+      await AsyncStorage.setItem('@salary', JSON.stringify(salary));
+      await AsyncStorage.setItem('@locker', JSON.stringify(locker));
     } catch (error) {
       console.error('Error saving data to AsyncStorage:', error);
     }
   };
 
-  // Example: a function to clear data, then store a snapshot in previousRecords
-  const clearData = () => {
+  // Clears data at the end of the week, including salary, locker, emptyIn, and emptyOut
+  const clearWeek = () => {
+    // 1) Save current snapshot in previousRecords
     const newRecord = {
       id: Date.now().toString(),
       bankDeposits,
       liquorItems,
       otherExpenses,
-      dateCleared: new Date().toISOString()
+      salary,
+      locker,
+      dateCleared: new Date().toISOString(),
     };
     setPreviousRecords((prev) => [...prev, newRecord]);
+
+    // 2) Clear bankDeposits & otherExpenses arrays
     setBankDeposits([]);
-    setLiquorItems([]);
     setOtherExpenses([]);
+
+    // 3) Reset salary and locker
+    setSalary(0);
+    setLocker(0);
+
+    // 4) For each liquor category & subLiquors, transfer inStock to purchasingStockTotal and reset inStock
+    const updatedLiquors = liquorItems.map((cat) => {
+      const updatedSubs = cat.subLiquors.map((sub) => {
+        const dozen = parseFloat(sub.dozen) || 1; // Avoid division by zero
+        const newQuantity = sub.inStock / dozen;
+
+        return {
+          ...sub,
+          quantityFields: [newQuantity], // Set purchasingStockTotal to previous inStock
+          inStock: 0, // Reset inStock
+          // If you have a 'sale' field, ensure it's handled appropriately
+          sale: 0, // Reset sale
+        };
+      });
+
+      return {
+        ...cat,
+        subLiquors: updatedSubs,
+        // Reset category-level emptyIn and emptyOut if applicable
+        emptyIn: 0,
+        emptyOut: 0,
+      };
+    });
+
+    setLiquorItems(updatedLiquors);
   };
 
   return (
@@ -67,7 +111,9 @@ export const DataProvider = ({ children }) => {
         liquorItems, setLiquorItems,
         otherExpenses, setOtherExpenses,
         previousRecords, setPreviousRecords,
-        clearData
+        clearWeek,
+        salary, setSalary,
+        locker, setLocker,
       }}
     >
       {children}

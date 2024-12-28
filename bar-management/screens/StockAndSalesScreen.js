@@ -10,6 +10,8 @@ import {
   TextInput,
   TouchableOpacity,
   ScrollView,
+  ImageBackground,
+  Dimensions,
 } from "react-native";
 import Ionicons from "@expo/vector-icons/Ionicons";
 import { useRoute } from "@react-navigation/native";
@@ -39,15 +41,7 @@ export default function StockAndSalesScreen() {
     );
   };
 
-  // Build a comma-separated list of numeric results (dozen * quantity)
-  const buildPurchasingStockList = (sub) => {
-    if (!sub.quantityFields || sub.quantityFields.length === 0) return "";
-    const dozen = sub.dozen || 0;
-    const parts = sub.quantityFields.map((q) => String(dozen * q));
-    return parts.join(", ");
-  };
-
-  // Sum (dozen * each quantity)
+  // Sum (dozen * quantityFields)
   const calcPurchasingStockTotal = (sub) => {
     const dozen = sub.dozen || 0;
     if (!sub.quantityFields) return 0;
@@ -59,17 +53,16 @@ export default function StockAndSalesScreen() {
     return sold < 0 ? 0 : sold;
   };
   const calcSale = (soldItems, sellingPrice) => soldItems * sellingPrice;
-  const calcInStockBalance = (inStock, sellingPrice) => inStock * sellingPrice;
+  const calcInStockBalance = (inStock, sellingPrice) =>
+    inStock * sellingPrice;
 
-  // Convert each subLiquor to a row
+  // Convert each subLiquor
   const getStockSalesRow = (sub) => {
     const buyingPrice = parseFloat(sub.buyingPrice) || 0;
     const sellingPrice = parseFloat(sub.sellingPrice) || 0;
     const inStock = parseFloat(sub.inStock) || 0;
 
-    const purchasingStockString = buildPurchasingStockList(sub);
-    const pStockTotal = calcPurchasingStockTotal(sub);
-
+    const pStockTotal = calcPurchasingStockTotal(sub); // Should be equal to previous inStock
     const soldItems = calcSoldItems(pStockTotal, inStock);
     const sale = calcSale(soldItems, sellingPrice);
     const inStockBalance = calcInStockBalance(inStock, sellingPrice);
@@ -80,7 +73,6 @@ export default function StockAndSalesScreen() {
       ml: sub.ml,
       buyingPrice,
       sellingPrice,
-      purchasingStockString,
       purchasingStockTotal: pStockTotal,
       soldItems,
       inStock,
@@ -89,7 +81,6 @@ export default function StockAndSalesScreen() {
     };
   };
 
-  // Compute total sale / total in stock
   let totalSale = 0;
   let totalInStockVal = 0;
   let subLiquorRows = [];
@@ -102,7 +93,7 @@ export default function StockAndSalesScreen() {
     });
   }
 
-  // Edit logic
+  // Edit
   const openEditModal = (row) => {
     setEditSubLiquor({
       ...row,
@@ -116,9 +107,13 @@ export default function StockAndSalesScreen() {
   const handleSaveEdit = () => {
     if (!editSubLiquor) return;
     const { id, buyingPrice, sellingPrice, inStock } = editSubLiquor;
-    if (!buyingPrice.trim() || !sellingPrice.trim() || !inStock.trim()) {
+    if (
+      !buyingPrice.trim() ||
+      !sellingPrice.trim() ||
+      !inStock.trim()
+    ) {
       Alert.alert(
-        "Required",
+        "Required Fields",
         "Buying Price, Selling Price, and In Stock are required."
       );
       return;
@@ -139,248 +134,402 @@ export default function StockAndSalesScreen() {
     const updatedCat = { ...category, subLiquors: updatedSubLiquors };
     updateCategory(updatedCat);
 
-    Alert.alert("Updated", "Stock & Sales info updated!");
+    Alert.alert("Success", "Stock & Sales information updated!");
     setEditModalVisible(false);
   };
 
   if (!category) {
     return (
       <View style={styles.container}>
-        <Text>Category not found or loading...</Text>
+        <Text style={styles.notFoundText}>
+          Category not found or loading...
+        </Text>
       </View>
     );
   }
 
-  // Table
+  // Table Header
   const renderTableHeader = () => (
     <View style={styles.tableHeader}>
-      <Text style={[styles.headerCell, { flex: 1.2 }]}>Name</Text>
-      <Text style={styles.headerCell}>ML</Text>
-      <Text style={styles.headerCell}>BuyPrice</Text>
-      <Text style={styles.headerCell}>SellPrice</Text>
-      {/* <Text style={[styles.headerCell, { flex: 1.5 }]}>Purchasing Stock</Text> */}
-      <Text style={styles.headerCell}>P. Stock T.</Text>
-      <Text style={styles.headerCell}>Sold</Text>
-      <Text style={styles.headerCell}>InStock</Text>
-      <Text style={styles.headerCell}>Sale</Text>
-      <Text style={styles.headerCell}>InStkBal</Text>
-      {/* Edit column with narrower flex */}
-      <Text style={[styles.headerCell, { flex: 0.8 }]}>Edit</Text>
+      <Text style={[styles.headerCell, { flex: 1.2, textAlign: "left" }]}>Name</Text>
+      <Text style={[styles.headerCell, { textAlign: "right" }]}>ML</Text>
+      <Text style={[styles.headerCell, { textAlign: "right" }]}>Buy Price (Rs)</Text>
+      <Text style={[styles.headerCell, { textAlign: "right" }]}>Sell Price (Rs)</Text>
+      <Text style={[styles.headerCell, { textAlign: "right" }]}>P. Stock T.</Text>
+      <Text style={[styles.headerCell, { textAlign: "right" }]}>Sold</Text>
+      <Text style={[styles.headerCell, { textAlign: "right" }]}>In Stock</Text>
+      <Text style={[styles.headerCell, { textAlign: "right" }]}>Sale (Rs)</Text>
+      <Text style={[styles.headerCell, { textAlign: "right" }]}>InStk Bal (Rs)</Text>
+      <Text style={[styles.headerCell, { flex: 0.8, textAlign: "center" }]}>Edit</Text>
     </View>
   );
 
-  const renderRow = ({ item }) => (
-    <View style={styles.tableRow}>
-      <Text style={[styles.cell, { flex: 1.2 }]}>{item.name}</Text>
-      <Text style={styles.cell}>{item.ml}</Text>
-      <Text style={styles.cell}>{item.buyingPrice}</Text>
-      <Text style={styles.cell}>{item.sellingPrice}</Text>
-      {/* <Text style={[styles.cell, { flex: 1.5 }]}>
-        {item.purchasingStockString}
-      </Text> */}
-      <Text style={styles.cell}>{item.purchasingStockTotal}</Text>
-      <Text style={styles.cell}>{item.soldItems}</Text>
-      <Text style={styles.cell}>{item.inStock}</Text>
-      <Text style={styles.cell}>{item.sale.toFixed(2)}</Text>
-      <Text style={styles.cell}>{item.inStockBalance.toFixed(2)}</Text>
+  // Table Row
+  const renderRow = ({ item, index }) => (
+    <View
+      style={[
+        styles.tableRow,
+        index % 2 === 0 ? styles.evenRow : styles.oddRow, // Apply alternate row colors
+      ]}
+    >
+      <Text style={[styles.cell, { flex: 1.2, textAlign: "left" }]}>{item.name}</Text>
+      <Text style={[styles.cell, { textAlign: "right" }]}>{item.ml}</Text>
+      <Text style={[styles.cell, { textAlign: "right" }]}>{item.buyingPrice.toFixed(2)}</Text>
+      <Text style={[styles.cell, { textAlign: "right" }]}>{item.sellingPrice.toFixed(2)}</Text>
+      <Text style={[styles.cell, { textAlign: "right" }]}>{item.purchasingStockTotal}</Text>
+      <Text style={[styles.cell, { textAlign: "right" }]}>{item.soldItems}</Text>
+      <Text style={[styles.cell, { textAlign: "right" }]}>{item.inStock}</Text>
+      <Text style={[styles.cell, { textAlign: "right" }]}>{item.sale.toFixed(2)}</Text>
+      <Text style={[styles.cell, { textAlign: "right" }]}>{item.inStockBalance.toFixed(2)}</Text>
 
-      {/* Center the edit icon */}
-      <View style={[styles.cell, { flex: 0.8, alignItems: "center" }]}>
-        <TouchableOpacity onPress={() => openEditModal(item)}>
-          <Ionicons name="create-outline" size={22} color="black" />
+      <View
+        style={[
+          styles.cell,
+          { flex: 0.8, alignItems: "center" },
+        ]}
+      >
+        <TouchableOpacity
+          onPress={() => openEditModal(item)}
+          accessibilityLabel={`Edit ${item.name} Stock and Sales`}
+          accessibilityHint={`Opens the edit modal for ${item.name}`}
+        >
+          <Ionicons name="create-outline" size={20} color="#2196F3" />
         </TouchableOpacity>
       </View>
     </View>
   );
 
   return (
-    <View style={styles.container}>
-      <View style={styles.totalsContainer}>
-        <Text style={styles.totalsText}>
-          Total Sale: Rs {totalSale.toFixed(2)}
-        </Text>
-        <Text style={styles.totalsText}>
-          Total In Stock: Rs {totalInStockVal.toFixed(2)}
-        </Text>
-      </View>
-
-      <ScrollView horizontal>
-        <View style={{ width: 1300 }}>
-          {renderTableHeader()}
-          <FlatList
-            data={subLiquorRows}
-            keyExtractor={(item) => item.id}
-            renderItem={renderRow}
-          />
+    <ImageBackground
+      source={require("../assets/cat1.jpg")} // Ensure this image exists in your assets folder
+      style={styles.container}
+      resizeMode="cover"
+    >
+      <View style={styles.overlay}>
+        {/* Header */}
+        <View style={styles.header}>
+          <Ionicons name="stats-chart-outline" size={40} color="#4CAF50" />
+          <Text style={styles.heading}>Stock & Sales</Text>
         </View>
-      </ScrollView>
 
-      {/* EDIT MODAL */}
-      <Modal
-        visible={editModalVisible}
-        transparent={false}
-        animationType="slide"
-      >
-        <ScrollView style={styles.modalScroll}>
-          <View style={styles.modalContainer}>
-            {editSubLiquor && (
-              <>
-                <Text style={styles.modalHeading}>Edit Stock & Sales</Text>
+        {/* Totals */}
+        <View style={styles.totalsContainer}>
+          <Text style={styles.totalsText}>
+            Total Sale: Rs {totalSale.toFixed(2)}
+          </Text>
+          <Text style={styles.totalsText}>
+            Total In Stock: Rs {totalInStockVal.toFixed(2)}
+          </Text>
+        </View>
 
-                <Text>Name</Text>
-                <Text style={[styles.readonlyField, { marginBottom: 10 }]}>
-                  {editSubLiquor.name}
+        {/* Liquor Information Table */}
+        <ScrollView horizontal>
+          <View style={styles.tableContainer}>
+            {renderTableHeader()}
+            {subLiquorRows.length > 0 ? (
+              <FlatList
+                data={subLiquorRows}
+                keyExtractor={(item) => item.id}
+                renderItem={renderRow}
+              />
+            ) : (
+              <View style={styles.emptyTableContainer}>
+                <Ionicons
+                  name="information-circle-outline"
+                  size={50}
+                  color="#ccc"
+                />
+                <Text style={styles.emptyTableText}>
+                  No Stock & Sales Data Available.
                 </Text>
-
-                <Text>Milliliters</Text>
-                <Text style={[styles.readonlyField, { marginBottom: 10 }]}>
-                  {editSubLiquor.ml}
-                </Text>
-
-                <Text>Buying Price</Text>
-                <TextInput
-                  style={styles.input}
-                  value={editSubLiquor.buyingPrice}
-                  onChangeText={(val) =>
-                    setEditSubLiquor((p) => ({ ...p, buyingPrice: val }))
-                  }
-                  keyboardType="numeric"
-                />
-
-                <Text>Selling Price</Text>
-                <TextInput
-                  style={styles.input}
-                  value={editSubLiquor.sellingPrice}
-                  onChangeText={(val) =>
-                    setEditSubLiquor((p) => ({ ...p, sellingPrice: val }))
-                  }
-                  keyboardType="numeric"
-                />
-
-                <Text>In Stock</Text>
-                <TextInput
-                  style={styles.input}
-                  value={editSubLiquor.inStock}
-                  onChangeText={(val) =>
-                    setEditSubLiquor((p) => ({ ...p, inStock: val }))
-                  }
-                  keyboardType="numeric"
-                />
-
-                {/* Icon buttons for Save/Cancel */}
-                <View style={styles.iconButtonRow}>
-                  <TouchableOpacity
-                    style={styles.iconButton}
-                    onPress={handleSaveEdit}
-                  >
-                    <Ionicons
-                      name="checkmark-circle-outline"
-                      size={34}
-                      color="green"
-                    />
-                    <Text>Save</Text>
-                  </TouchableOpacity>
-
-                  <TouchableOpacity
-                    style={styles.iconButton}
-                    onPress={() => setEditModalVisible(false)}
-                  >
-                    <Ionicons
-                      name="close-circle-outline"
-                      size={34}
-                      color="red"
-                    />
-                    <Text>Cancel</Text>
-                  </TouchableOpacity>
-                </View>
-              </>
+              </View>
             )}
           </View>
         </ScrollView>
-      </Modal>
-    </View>
+
+        {/* EDIT MODAL */}
+        <Modal
+          visible={editModalVisible}
+          transparent={true}
+          animationType="slide"
+        >
+          <View style={styles.modalOverlay}>
+            <ScrollView contentContainerStyle={styles.modalContainer}>
+              <View style={styles.modalContent}>
+                {editSubLiquor && (
+                  <>
+                    <Text style={styles.modalHeading}>
+                      Edit Stock & Sales
+                    </Text>
+
+                    {/* Buying Price */}
+                    <Text style={styles.modalLabel}>
+                      <Ionicons
+                        name="cash-outline"
+                        size={18}
+                        color="#555"
+                      />{" "}
+                      Buying Price (Rs)
+                    </Text>
+                    <TextInput
+                      style={styles.input}
+                      value={editSubLiquor.buyingPrice}
+                      onChangeText={(val) =>
+                        setEditSubLiquor((p) => ({
+                          ...p,
+                          buyingPrice: val,
+                        }))
+                      }
+                      keyboardType="numeric"
+                      placeholder="Enter Buying Price"
+                      accessibilityLabel="Buying Price Input"
+                      accessibilityHint="Enter the buying price of the liquor"
+                    />
+
+                    {/* Selling Price */}
+                    <Text style={styles.modalLabel}>
+                      <Ionicons
+                        name="cash-outline"
+                        size={18}
+                        color="#555"
+                      />{" "}
+                      Selling Price (Rs)
+                    </Text>
+                    <TextInput
+                      style={styles.input}
+                      value={editSubLiquor.sellingPrice}
+                      onChangeText={(val) =>
+                        setEditSubLiquor((p) => ({
+                          ...p,
+                          sellingPrice: val,
+                        }))
+                      }
+                      keyboardType="numeric"
+                      placeholder="Enter Selling Price"
+                      accessibilityLabel="Selling Price Input"
+                      accessibilityHint="Enter the selling price of the liquor"
+                    />
+
+                    {/* In Stock */}
+                    <Text style={styles.modalLabel}>
+                      <Ionicons
+                        name="archive-outline"
+                        size={18}
+                        color="#555"
+                      />{" "}
+                      In Stock
+                    </Text>
+                    <TextInput
+                      style={styles.input}
+                      value={editSubLiquor.inStock}
+                      onChangeText={(val) =>
+                        setEditSubLiquor((p) => ({
+                          ...p,
+                          inStock: val,
+                        }))
+                      }
+                      keyboardType="numeric"
+                      placeholder="Enter In Stock Quantity"
+                      accessibilityLabel="In Stock Input"
+                      accessibilityHint="Enter the current stock quantity of the liquor"
+                    />
+
+                    {/* Save and Cancel Buttons */}
+                    <View style={styles.modalButtons}>
+                      <TouchableOpacity
+                        onPress={handleSaveEdit}
+                        style={[styles.modalButton, styles.saveButton]}
+                        accessibilityLabel="Save Changes"
+                        accessibilityHint="Saves the edited stock and sales information"
+                      >
+                        <Ionicons
+                          name="checkmark-circle-outline"
+                          size={20}
+                          color="#fff"
+                        />
+                        <Text style={styles.modalButtonText}>Save</Text>
+                      </TouchableOpacity>
+
+                      <TouchableOpacity
+                        onPress={() => setEditModalVisible(false)}
+                        style={[styles.modalButton, styles.cancelButton]}
+                        accessibilityLabel="Cancel Editing"
+                        accessibilityHint="Closes the edit modal without saving changes"
+                      >
+                        <Ionicons
+                          name="close-circle-outline"
+                          size={20}
+                          color="#fff"
+                        />
+                        <Text style={styles.modalButtonText}>Cancel</Text>
+                      </TouchableOpacity>
+                    </View>
+                  </>
+                )}
+              </View>
+            </ScrollView>
+          </View>
+        </Modal>
+      </View>
+    </ImageBackground>
   );
 }
 
-// -----------------------------------
-// STYLES
-// -----------------------------------
+const screenWidth = Dimensions.get("window").width;
+
 const styles = StyleSheet.create({
   container: {
     flex: 1,
+  },
+  overlay: {
+    flex: 1,
+    backgroundColor: "rgba(255,255,255,0.9)", // Semi-transparent overlay for readability
     padding: 16,
   },
+  header: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 20,
+  },
+  heading: {
+    fontSize: 28,
+    fontWeight: "bold",
+    marginLeft: 12,
+    color: "black",
+  },
   totalsContainer: {
-    marginBottom: 8,
-    padding: 8,
-    backgroundColor: "#eee",
-    borderRadius: 6,
+    marginBottom: 10,
+    padding: 12,
+    backgroundColor: "#f1f8e9",
+    borderRadius: 8,
+    flexDirection: "row",
+    justifyContent: "space-between",
   },
   totalsText: {
     fontSize: 16,
-    fontWeight: "bold",
+    fontWeight: "600",
+    color: "#333",
+  },
+  tableContainer: {
+    minWidth: 1300, // Adjust based on content
+    borderWidth: 1,
+    borderColor: "#dcdcdc",
+    borderRadius: 8,
+    overflow: "hidden",
+    backgroundColor: "#fff",
   },
   tableHeader: {
     flexDirection: "row",
-    backgroundColor: "#dcdcdc",
-    paddingVertical: 8,
-    borderTopWidth: 1,
-    borderColor: "#bbb",
+    backgroundColor: "#4CAF50",
+    paddingVertical: 10,
+    borderTopLeftRadius: 8,
+    borderTopRightRadius: 8,
   },
   headerCell: {
     fontWeight: "bold",
-    fontSize: 13,
+    fontSize: 14,
     flex: 1,
     textAlign: "center",
+    color: "#fff",
   },
   tableRow: {
     flexDirection: "row",
+    paddingVertical: 12,
+    paddingHorizontal: 8,
     borderBottomWidth: 1,
     borderColor: "#ccc",
+    alignItems: "center",
+  },
+  evenRow: {
+    backgroundColor: "#f9f9f9", // Light gray for even rows
+  },
+  oddRow: {
+    backgroundColor: "#fff", // White for odd rows
   },
   cell: {
     flex: 1,
     padding: 6,
     textAlign: "center",
-    fontSize: 13,
+    fontSize: 14,
+    color: "#555",
+  },
+  notFoundText: {
+    fontSize: 18,
+    color: "#F44336",
+    textAlign: "center",
+    marginTop: 20,
+  },
+  emptyTableContainer: {
+    padding: 20,
+    alignItems: "center",
+  },
+  emptyTableText: {
+    fontSize: 16,
+    color: "#aaa",
+    marginTop: 10,
+    textAlign: "center",
+  },
+  modalOverlay: {
+    flex: 1,
+    backgroundColor: "rgba(0,0,0,0.5)",
     justifyContent: "center",
-  },
-  modalScroll: {
-    flex: 1,
-    marginTop: 50,
-  },
-  modalContainer: {
-    flex: 1,
     padding: 16,
   },
-  modalHeading: {
-    fontSize: 18,
-    fontWeight: "bold",
-    marginBottom: 10,
+  modalContainer: {
+    backgroundColor: "#fff",
+    borderRadius: 10,
+    padding: 20,
+    elevation: 5,
   },
-  readonlyField: {
-    paddingVertical: 6,
-    paddingHorizontal: 8,
-    borderWidth: 1,
-    borderColor: "#ccc",
-    borderRadius: 6,
-    backgroundColor: "#f2f2f2",
-    color: "#555",
+  modalContent: {
+    flex: 1,
+  },
+  modalHeading: {
+    fontSize: 22,
+    fontWeight: "bold",
+    marginBottom: 20,
+    textAlign: "center",
+    color: "#4CAF50",
+  },
+  modalLabel: {
+    fontSize: 16,
+    marginBottom: 6,
+    color: "#333",
+    fontWeight: "600",
   },
   input: {
     borderWidth: 1,
     borderColor: "#ccc",
     borderRadius: 6,
-    marginBottom: 10,
-    padding: 8,
+    marginBottom: 12,
+    padding: 10,
+    fontSize: 16,
+    backgroundColor: "#f9f9f9",
+    color: "#333",
   },
-  iconButtonRow: {
+  modalButtons: {
     flexDirection: "row",
     justifyContent: "space-around",
     marginTop: 20,
   },
-  iconButton: {
+  modalButton: {
+    flexDirection: "row",
     alignItems: "center",
-    marginHorizontal: 20,
+    padding: 12,
+    borderRadius: 6,
+    width: "40%",
+    justifyContent: "center",
+  },
+  saveButton: {
+    backgroundColor: "#4CAF50",
+  },
+  cancelButton: {
+    backgroundColor: "#F44336",
+  },
+  modalButtonText: {
+    color: "#fff",
+    fontSize: 16,
+    marginLeft: 6,
+    fontWeight: "600",
   },
 });

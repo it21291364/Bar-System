@@ -7,46 +7,38 @@ import Ionicons from "@expo/vector-icons/Ionicons";
 
 import { DataProvider } from "./context/DataContext";
 
-// Import your existing screens
 import BankDepositScreen from "./screens/BankDepositScreen";
 import OtherExpensesScreen from "./screens/OtherExpensesScreen";
 import TotalSummaryScreen from "./screens/TotalSummaryScreen";
+// If you have a PreviousRecordsScreen, import it
 import PreviousRecordsScreen from "./screens/PreviousRecordsScreen";
 
-// Import the Liquor screens
+// Liquor screens
 import LiquorScreen from "./screens/LiquorScreen";
 import CategoryDetailsScreen from "./screens/CategoryDetailsScreen";
 import LiquorInfoScreen from "./screens/LiquorInfoScreen";
 import StockAndSalesScreen from "./screens/StockAndSalesScreen";
 
-// Create a Stack for all Liquor-related screens
 const LiquorStack = createStackNavigator();
 
 function LiquorStackScreen() {
   return (
     <LiquorStack.Navigator>
-      {/* Main Liquor Categories screen */}
       <LiquorStack.Screen
         name="LiquorMain"
         component={LiquorScreen}
         options={{ title: "Liquor Categories" }}
       />
-
-      {/* Screen for category details (with Empty In/Out, etc.) */}
       <LiquorStack.Screen
         name="CategoryDetails"
         component={CategoryDetailsScreen}
         options={{ title: "Category Details" }}
       />
-
-      {/* Screen for Liquor Info (Name, ml, Dozen, Quantity) */}
       <LiquorStack.Screen
         name="LiquorInfo"
         component={LiquorInfoScreen}
         options={{ title: "Liquor Info" }}
       />
-
-      {/* Screen for Stock & Sales calculations */}
       <LiquorStack.Screen
         name="StockAndSales"
         component={StockAndSalesScreen}
@@ -56,7 +48,6 @@ function LiquorStackScreen() {
   );
 }
 
-// Create the bottom tab navigator
 const Tab = createBottomTabNavigator();
 
 export default function App() {
@@ -65,7 +56,6 @@ export default function App() {
       <NavigationContainer>
         <Tab.Navigator
           screenOptions={({ route }) => ({
-            // This returns an Ionicon for each route
             tabBarIcon: ({ focused, color, size }) => {
               let iconName;
               switch (route.name) {
@@ -115,7 +105,7 @@ export default function App() {
           />
           <Tab.Screen
             name="Records"
-            component={PreviousRecordsScreen}
+            component={PreviousRecordsScreen} // Ensure this screen exists
             options={{ headerShown: false }}
           />
         </Tab.Navigator>
