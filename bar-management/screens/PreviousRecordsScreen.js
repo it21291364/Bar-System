@@ -158,46 +158,63 @@ export default function PreviousRecordsScreen() {
             {/* Summary Section */}
             <View style={styles.section}>
               <Text style={styles.sectionHeader}>
-                <Ionicons name="stats-chart-outline" size={18} color="#4CAF50" /> Summary
+                <Ionicons
+                  name="stats-chart-outline"
+                  size={18}
+                  color="#4CAF50"
+                />{" "}
+                Summary
               </Text>
               <Text style={styles.detailText}>
-                <Ionicons name="cash-outline" size={16} color="#333" /> Total Deposit: Rs{" "}
-                {totalDeposit.toFixed(2)}
+                <Ionicons name="cash-outline" size={16} color="#333" /> Total
+                Deposit: Rs {totalDeposit.toFixed(2)}
               </Text>
               <Text style={styles.detailText}>
-                <Ionicons name="cash-outline" size={16} color="#333" /> Total Expenses: Rs{" "}
-                {totalExpenses.toFixed(2)}
+                <Ionicons name="cash-outline" size={16} color="#333" /> Total
+                Expenses: Rs {totalExpenses.toFixed(2)}
               </Text>
               <Text style={styles.detailText}>
-                <Ionicons name="pricetag-outline" size={16} color="#333" /> Total Sale: Rs{" "}
-                {totalSale.toFixed(2)}
+                <Ionicons name="pricetag-outline" size={16} color="#333" />{" "}
+                Total Sale: Rs {totalSale.toFixed(2)}
               </Text>
               <Text style={styles.detailText}>
-                <Ionicons name="archive-outline" size={16} color="#333" /> Empty Stock Total: Rs{" "}
-                {totalEmptyStock.toFixed(2)}
+                <Ionicons name="archive-outline" size={16} color="#333" /> Empty
+                Stock Total: Rs {totalEmptyStock.toFixed(2)}
               </Text>
               <Text style={styles.detailText}>
-                <Ionicons name="person-outline" size={16} color="#333" /> Salary: Rs{" "}
-                {salary.toFixed(2)}
+                <Ionicons name="person-outline" size={16} color="#333" />{" "}
+                Salary: Rs {salary.toFixed(2)}
               </Text>
               <Text style={styles.detailText}>
-                <Ionicons name="lock-closed-outline" size={16} color="#333" /> Locker: Rs{" "}
-                {locker.toFixed(2)}
+                <Ionicons name="lock-closed-outline" size={16} color="#333" />{" "}
+                Locker: Rs {locker.toFixed(2)}
               </Text>
             </View>
 
             {/* Deposits Section */}
             <View style={styles.section}>
               <Text style={styles.sectionHeader}>
-                <Ionicons name="arrow-down-circle-outline" size={18} color="#4CAF50" /> Deposits
+                <Ionicons
+                  name="arrow-down-circle-outline"
+                  size={18}
+                  color="#4CAF50"
+                />{" "}
+                Deposits
               </Text>
               {item.bankDeposits && item.bankDeposits.length > 0 ? (
                 item.bankDeposits.map((dep) => (
                   <View key={dep.id} style={styles.subItem}>
-                    <Ionicons name="ellipse-outline" size={12} color="#4CAF50" />
-                    <Text style={styles.subItemText}>
-                      {new Date(dep.date).toLocaleDateString()}: Rs {dep.amount.toFixed(2)}
-                    </Text>
+                    <Ionicons
+                      name="ellipse-outline"
+                      size={12}
+                      color="#4CAF50"
+                    />
+                    <View>
+                      <Text style={styles.subItemText}>
+                        {new Date(dep.date).toLocaleDateString()}: Rs{" "}
+                        {dep.amount.toFixed(2)}
+                      </Text>
+                    </View>
                   </View>
                 ))
               ) : (
@@ -207,59 +224,93 @@ export default function PreviousRecordsScreen() {
 
             {/* Expenses Section */}
             <View style={styles.section}>
-              <Text style={styles.sectionHeader}>
-                <Ionicons name="arrow-up-circle-outline" size={18} color="#F44336" /> Expenses
-              </Text>
-              {item.otherExpenses && item.otherExpenses.length > 0 ? (
-                item.otherExpenses.map((exp) => (
-                  <View key={exp.id} style={styles.subItem}>
-                    <Ionicons name="ellipse-outline" size={12} color="#F44336" />
-                    <Text style={styles.subItemText}>
-                      {new Date(exp.date).toLocaleDateString()}: Rs {exp.amount.toFixed(2)}
-                    </Text>
-                  </View>
-                ))
-              ) : (
-                <Text style={styles.noDataText}>No expenses recorded.</Text>
-              )}
-            </View>
+  <Text style={styles.sectionHeader}>
+    <Ionicons name="arrow-up-circle-outline" size={18} color="#F44336" /> Expenses
+  </Text>
+  {item.otherExpenses && item.otherExpenses.length > 0 ? (
+    item.otherExpenses.map((exp) => (
+      <View key={exp.id} style={styles.subItemRow}>
+        <Ionicons name="ellipse-outline" size={12} color="#F44336" style={styles.icon} />
+        <Text style={styles.subItemRowText}>
+          {new Date(exp.date).toLocaleDateString()} - Rs {exp.amount.toFixed(2)}
+          {exp.reason && ` - Reason: ${exp.reason}`}
+        </Text>
+      </View>
+    ))
+  ) : (
+    <Text style={styles.noDataText}>No expenses recorded.</Text>
+  )}
+</View>
+
 
             {/* Liquors Section */}
             <View style={styles.section}>
               <Text style={styles.sectionHeader}>
-                <Ionicons name="beer-outline" size={18} color="#4CAF50" /> Liquors
+                <Ionicons name="beer-outline" size={18} color="#4CAF50" />{" "}
+                Liquors
               </Text>
               {item.liquorItems && item.liquorItems.length > 0 ? (
                 item.liquorItems.map((cat) => (
                   <View key={cat.id} style={styles.subSection}>
                     <Text style={styles.categoryName}>
-                      <Ionicons name="wine-outline" size={16} color="#4CAF50" /> {cat.name}
+                      <Ionicons name="wine-outline" size={16} color="#4CAF50" />{" "}
+                      {cat.name}
                     </Text>
                     <Text style={styles.detailText}>
-                      <Ionicons name="information-circle-outline" size={14} color="#555" /> Empty Calculated In: Rs {cat.calculatedEmptyIn.toFixed(2)}
+                      <Ionicons
+                        name="information-circle-outline"
+                        size={14}
+                        color="#555"
+                      />{" "}
+                      Empty Calculated In: Rs {cat.calculatedEmptyIn.toFixed(2)}
                     </Text>
                     <Text style={styles.detailText}>
-                      <Ionicons name="information-circle-outline" size={14} color="#555" /> Empty Calculated Out: Rs {cat.calculatedEmptyOut.toFixed(2)}
+                      <Ionicons
+                        name="information-circle-outline"
+                        size={14}
+                        color="#555"
+                      />{" "}
+                      Empty Calculated Out: Rs{" "}
+                      {cat.calculatedEmptyOut.toFixed(2)}
                     </Text>
                     {cat.subLiquors && cat.subLiquors.length > 0 ? (
                       cat.subLiquors.map((sub) => (
                         <View key={sub.id} style={styles.liquorItem}>
                           <Text style={styles.detailText}>
-                            <Ionicons name="information-circle-outline" size={14} color="#555" /> {sub.name} - {sub.ml}ml
+                            <Ionicons
+                              name="information-circle-outline"
+                              size={14}
+                              color="#555"
+                            />{" "}
+                            {sub.name} - {sub.ml}ml
                           </Text>
                           <Text style={styles.detailText}>
-                            Sold: {sub.soldItems} units, Sale: Rs {sub.sale.toFixed(2)}, In Stock: {sub.inStock} units
+                            Sold: {sub.soldItems} units, Sale: Rs{" "}
+                            {sub.sale.toFixed(2)}, In Stock: {sub.inStock} units
                           </Text>
                           <Text style={styles.detailText}>
-                            <Ionicons name="cash-outline" size={14} color="#555" /> Purchase Stock Total: {sub.purchasingStockTotal} units
+                            <Ionicons
+                              name="cash-outline"
+                              size={14}
+                              color="#555"
+                            />{" "}
+                            Purchase Stock Total: {sub.purchasingStockTotal}{" "}
+                            units
                           </Text>
                           <Text style={styles.detailText}>
-                            <Ionicons name="cash-outline" size={14} color="#555" /> InStock Balance: Rs {sub.inStockBalance.toFixed(2)}
+                            <Ionicons
+                              name="cash-outline"
+                              size={14}
+                              color="#555"
+                            />{" "}
+                            InStock Balance: Rs {sub.inStockBalance.toFixed(2)}
                           </Text>
                         </View>
                       ))
                     ) : (
-                      <Text style={styles.noDataText}>No liquors recorded.</Text>
+                      <Text style={styles.noDataText}>
+                        No liquors recorded.
+                      </Text>
                     )}
                   </View>
                 ))
@@ -447,4 +498,19 @@ const styles = StyleSheet.create({
     marginTop: 10,
     textAlign: "center",
   },
+  subItemRow: {
+    flexDirection: "row",
+    alignItems: "center",
+    marginBottom: 6,
+  },
+  subItemRowText: {
+    marginLeft: 8,
+    fontSize: 16,
+    color: "#555",
+    flexShrink: 1, // Allows text to wrap if it exceeds available space
+  },
+  icon: {
+    marginRight: 8, // Adds spacing between the icon and text
+  },
+  
 });

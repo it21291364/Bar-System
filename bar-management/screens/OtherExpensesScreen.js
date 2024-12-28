@@ -25,6 +25,7 @@ export default function OtherExpensesScreen() {
   const [newExpense, setNewExpense] = useState({
     date: new Date(),
     amount: "",
+    reason: "", // Add reason field
   });
   const [showDatePicker, setShowDatePicker] = useState(false);
 
@@ -52,7 +53,10 @@ export default function OtherExpensesScreen() {
 
   const handleAddExpense = () => {
     if (!newExpense.date || newExpense.amount.trim() === "") {
-      Alert.alert("Required Fields", "Please fill in all fields before adding.");
+      Alert.alert(
+        "Required Fields",
+        "Please fill in all fields before adding."
+      );
       return;
     }
 
@@ -66,6 +70,7 @@ export default function OtherExpensesScreen() {
       id: Date.now().toString(),
       date: formatDate(newExpense.date),
       amount: numericAmount,
+      reason: newExpense.reason.trim(), // Include reason
     };
     setOtherExpenses((prev) => [...prev, expenseObj]);
     Alert.alert("Expense Added", "Your expense has been added successfully!");
@@ -76,17 +81,24 @@ export default function OtherExpensesScreen() {
   // DELETE (with confirmation)
   // ----------------------
   const handleDelete = (id) => {
-    Alert.alert("Confirm Delete", "Are you sure you want to delete this expense?", [
-      { text: "Cancel", style: "cancel" },
-      {
-        text: "Delete",
-        style: "destructive",
-        onPress: () => {
-          setOtherExpenses((prev) => prev.filter((item) => item.id !== id));
-          Alert.alert("Expense Deleted", "The expense was deleted successfully!");
+    Alert.alert(
+      "Confirm Delete",
+      "Are you sure you want to delete this expense?",
+      [
+        { text: "Cancel", style: "cancel" },
+        {
+          text: "Delete",
+          style: "destructive",
+          onPress: () => {
+            setOtherExpenses((prev) => prev.filter((item) => item.id !== id));
+            Alert.alert(
+              "Expense Deleted",
+              "The expense was deleted successfully!"
+            );
+          },
         },
-      },
-    ]);
+      ]
+    );
   };
 
   // ----------------------
@@ -114,6 +126,7 @@ export default function OtherExpensesScreen() {
                 ? formatDate(editItem.date)
                 : editItem.date,
             amount: numericAmount,
+            reason: editItem.reason.trim(), // Include reason
           };
         }
         return exp;
@@ -129,17 +142,29 @@ export default function OtherExpensesScreen() {
     <View style={styles.row}>
       <View style={styles.rowContent}>
         <Text style={styles.cell}>
-          <Ionicons name="calendar-outline" size={16} color="#555" /> Date: {item.date}
+          <Ionicons name="calendar-outline" size={16} color="#555" /> Date:{" "}
+          {item.date}
         </Text>
         <Text style={styles.cell}>
-          <Ionicons name="cash-outline" size={16} color="#555" /> Amount: Rs {item.amount.toFixed(2)}
+          <Ionicons name="cash-outline" size={16} color="#555" /> Amount: Rs{" "}
+          {item.amount.toFixed(2)}
+        </Text>
+        <Text style={styles.cell}>
+          <Ionicons name="document-outline" size={16} color="#555" /> Reason:{" "}
+          {item.reason}
         </Text>
       </View>
       <View style={styles.actions}>
-        <TouchableOpacity onPress={() => openEditModal(item)} style={styles.actionIcon}>
+        <TouchableOpacity
+          onPress={() => openEditModal(item)}
+          style={styles.actionIcon}
+        >
           <Ionicons name="create-outline" size={20} color="#4CAF50" />
         </TouchableOpacity>
-        <TouchableOpacity onPress={() => handleDelete(item.id)} style={styles.actionIcon}>
+        <TouchableOpacity
+          onPress={() => handleDelete(item.id)}
+          style={styles.actionIcon}
+        >
           <Ionicons name="trash-outline" size={20} color="#F44336" />
         </TouchableOpacity>
       </View>
@@ -166,7 +191,9 @@ export default function OtherExpensesScreen() {
       {/* Total Expenses */}
       <View style={styles.totalContainer}>
         <Ionicons name="cash-outline" size={20} color="#4CAF50" />
-        <Text style={styles.totalText}>Total Expenses: Rs {totalExpenses.toFixed(2)}</Text>
+        <Text style={styles.totalText}>
+          Total Expenses: Rs {totalExpenses.toFixed(2)}
+        </Text>
       </View>
 
       {/* Expenses List */}
@@ -180,7 +207,9 @@ export default function OtherExpensesScreen() {
       ) : (
         <View style={styles.emptyContainer}>
           <Ionicons name="cash-outline" size={50} color="#ccc" />
-          <Text style={styles.emptyText}>No Expenses Found. Add a new expense!</Text>
+          <Text style={styles.emptyText}>
+            No Expenses Found. Add a new expense!
+          </Text>
         </View>
       )}
 
@@ -199,7 +228,9 @@ export default function OtherExpensesScreen() {
                 style={styles.datePicker}
                 onPress={() => setShowDatePicker(true)}
               >
-                <Text style={styles.dateText}>{formatDate(newExpense.date)}</Text>
+                <Text style={styles.dateText}>
+                  {formatDate(newExpense.date)}
+                </Text>
                 <Ionicons name="calendar-outline" size={20} color="#4CAF50" />
               </TouchableOpacity>
               {showDatePicker && (
@@ -221,7 +252,8 @@ export default function OtherExpensesScreen() {
 
               {/* Amount Input */}
               <Text style={styles.modalLabel}>
-                <Ionicons name="cash-outline" size={18} color="#555" /> Amount (Rs)
+                <Ionicons name="cash-outline" size={18} color="#555" /> Amount
+                (Rs)
               </Text>
               <TextInput
                 style={styles.textInput}
@@ -233,13 +265,30 @@ export default function OtherExpensesScreen() {
                 placeholder="e.g. 1500.00"
               />
 
+              <Text style={styles.modalLabel}>
+                <Ionicons name="document-outline" size={18} color="#555" />
+                Reason
+              </Text>
+              <TextInput
+                style={styles.textInput}
+                value={newExpense.reason}
+                onChangeText={(val) =>
+                  setNewExpense((prev) => ({ ...prev, reason: val }))
+                }
+                placeholder="Enter reason for expense"
+              />
+
               {/* Save and Cancel Buttons */}
               <View style={styles.modalButtons}>
                 <TouchableOpacity
                   onPress={handleAddExpense}
                   style={[styles.modalButton, styles.saveButton]}
                 >
-                  <Ionicons name="checkmark-circle-outline" size={20} color="#fff" />
+                  <Ionicons
+                    name="checkmark-circle-outline"
+                    size={20}
+                    color="#fff"
+                  />
                   <Text style={styles.modalButtonText}>Save</Text>
                 </TouchableOpacity>
 
@@ -247,7 +296,11 @@ export default function OtherExpensesScreen() {
                   onPress={() => setAddModalVisible(false)}
                   style={[styles.modalButton, styles.cancelButton]}
                 >
-                  <Ionicons name="close-circle-outline" size={20} color="#fff" />
+                  <Ionicons
+                    name="close-circle-outline"
+                    size={20}
+                    color="#fff"
+                  />
                   <Text style={styles.modalButtonText}>Cancel</Text>
                 </TouchableOpacity>
               </View>
@@ -257,7 +310,11 @@ export default function OtherExpensesScreen() {
       </Modal>
 
       {/* EDIT EXPENSE MODAL */}
-      <Modal visible={editModalVisible} animationType="slide" transparent={true}>
+      <Modal
+        visible={editModalVisible}
+        animationType="slide"
+        transparent={true}
+      >
         <View style={styles.modalOverlay}>
           <ScrollView style={styles.modalContainer}>
             <View style={styles.modalContent}>
@@ -267,7 +324,8 @@ export default function OtherExpensesScreen() {
 
                   {/* Date Picker */}
                   <Text style={styles.modalLabel}>
-                    <Ionicons name="calendar-outline" size={18} color="#555" /> Date
+                    <Ionicons name="calendar-outline" size={18} color="#555" />{" "}
+                    Date
                   </Text>
                   <TouchableOpacity
                     style={styles.datePicker}
@@ -278,7 +336,11 @@ export default function OtherExpensesScreen() {
                         ? formatDate(editItem.date)
                         : editItem.date}
                     </Text>
-                    <Ionicons name="calendar-outline" size={20} color="#4CAF50" />
+                    <Ionicons
+                      name="calendar-outline"
+                      size={20}
+                      color="#4CAF50"
+                    />
                   </TouchableOpacity>
                   {editDatePicker && (
                     <DateTimePicker
@@ -303,7 +365,8 @@ export default function OtherExpensesScreen() {
 
                   {/* Amount Input */}
                   <Text style={styles.modalLabel}>
-                    <Ionicons name="cash-outline" size={18} color="#555" /> Amount (Rs)
+                    <Ionicons name="cash-outline" size={18} color="#555" />{" "}
+                    Amount (Rs)
                   </Text>
                   <TextInput
                     style={styles.textInput}
@@ -315,13 +378,30 @@ export default function OtherExpensesScreen() {
                     placeholder="e.g. 1500.00"
                   />
 
+                  <Text style={styles.modalLabel}>
+                    <Ionicons name="document-outline" size={18} color="#555" />{" "}
+                    Reason
+                  </Text>
+                  <TextInput
+                    style={styles.textInput}
+                    value={editItem.reason}
+                    onChangeText={(val) =>
+                      setEditItem((prev) => ({ ...prev, reason: val }))
+                    }
+                    placeholder="Edit reason for expense"
+                  />
+
                   {/* Save and Cancel Buttons */}
                   <View style={styles.modalButtons}>
                     <TouchableOpacity
                       onPress={handleSaveEdit}
                       style={[styles.modalButton, styles.saveButton]}
                     >
-                      <Ionicons name="checkmark-circle-outline" size={20} color="#fff" />
+                      <Ionicons
+                        name="checkmark-circle-outline"
+                        size={20}
+                        color="#fff"
+                      />
                       <Text style={styles.modalButtonText}>Save</Text>
                     </TouchableOpacity>
 
@@ -329,7 +409,11 @@ export default function OtherExpensesScreen() {
                       onPress={() => setEditModalVisible(false)}
                       style={[styles.modalButton, styles.cancelButton]}
                     >
-                      <Ionicons name="close-circle-outline" size={20} color="#fff" />
+                      <Ionicons
+                        name="close-circle-outline"
+                        size={20}
+                        color="#fff"
+                      />
                       <Text style={styles.modalButtonText}>Cancel</Text>
                     </TouchableOpacity>
                   </View>
