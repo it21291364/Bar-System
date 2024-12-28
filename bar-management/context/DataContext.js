@@ -1,4 +1,5 @@
 // context/DataContext.js
+
 import React, { createContext, useState, useEffect } from 'react';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 
@@ -57,27 +58,31 @@ export const DataProvider = ({ children }) => {
 
   // Clears data at the end of the week, including salary, locker, emptyIn, and emptyOut
   const clearWeek = () => {
-    // 1) Save current snapshot in previousRecords
+    // 1) Sanitize salary and locker to ensure they are numbers
+    const sanitizedSalary = parseFloat(salary) || 0;
+    const sanitizedLocker = parseFloat(locker) || 0;
+
+    // 2) Save current snapshot in previousRecords
     const newRecord = {
       id: Date.now().toString(),
       bankDeposits,
       liquorItems,
       otherExpenses,
-      salary,
-      locker,
+      salary: sanitizedSalary,
+      locker: sanitizedLocker,
       dateCleared: new Date().toISOString(),
     };
     setPreviousRecords((prev) => [...prev, newRecord]);
 
-    // 2) Clear bankDeposits & otherExpenses arrays
+    // 3) Clear bankDeposits & otherExpenses arrays
     setBankDeposits([]);
     setOtherExpenses([]);
 
-    // 3) Reset salary and locker
+    // 4) Reset salary and locker
     setSalary(0);
     setLocker(0);
 
-    // 4) For each liquor category & subLiquors, transfer inStock to purchasingStockTotal and reset inStock
+    // 5) For each liquor category & subLiquors, transfer inStock to purchasingStockTotal and reset inStock
     const updatedLiquors = liquorItems.map((cat) => {
       const updatedSubs = cat.subLiquors.map((sub) => {
         const dozen = parseFloat(sub.dozen) || 1; // Avoid division by zero
@@ -87,7 +92,6 @@ export const DataProvider = ({ children }) => {
           ...sub,
           quantityFields: [newQuantity], // Set purchasingStockTotal to previous inStock
           inStock: 0, // Reset inStock
-          // If you have a 'sale' field, ensure it's handled appropriately
           sale: 0, // Reset sale
         };
       });

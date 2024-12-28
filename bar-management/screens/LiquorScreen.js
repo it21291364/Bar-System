@@ -122,7 +122,7 @@ export default function LiquorScreen() {
       <View style={styles.overlay}>
         {/* Header */}
         <View style={styles.header}>
-          <Ionicons name="wine-outline" size={40} color="#fff" />
+          <Ionicons name="wine-outline" size={40} color="#4CAF50" />
           <Text style={styles.heading}>Liquor Categories</Text>
         </View>
 

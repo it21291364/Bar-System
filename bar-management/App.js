@@ -1,4 +1,5 @@
 // App.js
+
 import React from "react";
 import { NavigationContainer } from "@react-navigation/native";
 import { createBottomTabNavigator } from "@react-navigation/bottom-tabs";
@@ -10,8 +11,7 @@ import { DataProvider } from "./context/DataContext";
 import BankDepositScreen from "./screens/BankDepositScreen";
 import OtherExpensesScreen from "./screens/OtherExpensesScreen";
 import TotalSummaryScreen from "./screens/TotalSummaryScreen";
-// If you have a PreviousRecordsScreen, import it
-import PreviousRecordsScreen from "./screens/PreviousRecordsScreen";
+import PreviousRecordsScreen from "./screens/PreviousRecordsScreen"; // Ensure this import
 
 // Liquor screens
 import LiquorScreen from "./screens/LiquorScreen";
@@ -69,7 +69,9 @@ export default function App() {
                   iconName = focused ? "reader" : "reader-outline";
                   break;
                 case "Summary":
-                  iconName = focused ? "document-text" : "document-text-outline";
+                  iconName = focused
+                    ? "document-text"
+                    : "document-text-outline";
                   break;
                 case "Records":
                   iconName = focused ? "time" : "time-outline";
@@ -77,7 +79,9 @@ export default function App() {
                 default:
                   iconName = "help-circle-outline";
               }
-              return <Ionicons name={iconName} size={size} color={color} />;
+              return (
+                <Ionicons name={iconName} size={size} color={color} />
+              );
             },
             tabBarActiveTintColor: "tomato",
             tabBarInactiveTintColor: "gray",
