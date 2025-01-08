@@ -48,7 +48,7 @@ export default function ProfileScreen({ handleLogout }) {
         </View>
         <View style={styles.footer}>
           <Text style={styles.footerText}>
-            Copyright 2022 © NUKARA SOLUTION. All Rights Reserved.
+            Copyright 2025 © Nukara Solutions. All Rights Reserved.
           </Text>
         </View>
       </SafeAreaView>
